@@ -1,0 +1,24 @@
+csvmerge.py
+Small python script to merge two .csv file on a common field
+
+License: GPL v2, see gpl.txt.
+
+usage: csvmerge.py -1 column1 -2 column2 [-o n.m,...] [--first|--last]
+                   [--stop] [--only [1|2]] file1 file2
+
+    Merges two CSV files in a GNU join way.
+    
+
+options:
+  -h, --help   show this help message and exit
+  -1  column1  column of first file (starts at 1)
+  -2  column2  column of second file (starts at 1)
+  -o  n.m,...  Ouput format, comma separated values of n.m where
+               n is the file number an m the field number.
+               Default is 1.*,2.* = display all fields in both files
+  --stop       do not continue if duplicate is found within one
+               file
+  --first      in case of duplicate within one file, use first
+               instance (default)
+  --last       opposite to --first, keep last instance
+  --only=1|2   show only elements in file 1 or 2
