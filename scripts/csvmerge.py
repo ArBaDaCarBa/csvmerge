@@ -3,8 +3,10 @@
 # Merges two csv files based on a column identity
 # $Id: csvmerge.py,v 1.9 2003/12/01 15:39:28 bertrand Exp $
 
-import sys, csv
+import sys
+import csv
 from optparse import OptionParser
+
 
 class WritableNextableList(list):
     """Add the write method to a list
@@ -20,17 +22,19 @@ class WritableNextableList(list):
         if self._pos > len(self):
             raise StopIteration()
         return self[self._pos - 1]
-    
+
+
 def ab_to_12(ab_value):
     """Convert A, B, C, ...AA, AB, ... HJ, HK... notation to numeric index
 
     ab_value -- AB column notation
     """
     value = 0
-    for c in ab_value.upper(): # Going thru the text
+    for c in ab_value.upper():  # Going thru the text
         value = value * 26
-        value = value + ord(c) - 64 # 64 = ord('A') - 1
+        value = value + ord(c) - 64  # 64 = ord('A') - 1
     return value
+
 
 def findCommonColumnList(data1, data2, column1, column2):
     """Find common column values between two lists of lists.
@@ -47,10 +51,11 @@ def findCommonColumnList(data1, data2, column1, column2):
     """
 
     # Create index of values
-    values1 = [ elmnt[column1] for elmnt in data1 ]
-    values2 = [ elmnt[column2] for elmnt in data2 ]
+    values1 = [elmnt[column1] for elmnt in data1]
+    values2 = [elmnt[column2] for elmnt in data2]
 
-    return [ elmnt for elmnt in values1 if elmnt in values2 ]
+    return [elmnt for elmnt in values1 if elmnt in values2]
+
 
 def csv2array(handler):
     """Reads a file and returns a array with all the data
@@ -58,21 +63,23 @@ def csv2array(handler):
     handler -- file handler
     """
     ret = []
-    
+
     # Reading the file
     csv_reader = csv.reader(handler)
-    
+
     for line in csv_reader:
         ret.append(line)
 
     return ret
+
 
 def getMaxLength(array):
     """returns length of the longer line in the array
 
     array -- list of lists
     """
-    return max( [ len(el) for el in array ] )
+    return max([len(el) for el in array])
+
 
 def normalizeArray(array, max_length=None):
     """Normalize the size of each array line
@@ -86,11 +93,12 @@ def normalizeArray(array, max_length=None):
 
     for line in array:
         line += [''] * (max_length - len(line))
-        
+
+
 def makeIndexedDict(array, column, options):
     """Create a dictionnary {column_value: line,...}
     **BE CAREFUL WITH DUPLICATES!!!**
-    
+
     array -- list of lists
 
     column -- column number to be the index
@@ -101,7 +109,7 @@ def makeIndexedDict(array, column, options):
 
     for line in array:
         key = line[column].strip()
-        if ret.has_key(key):
+        if key in ret:
             # key already exists
             if options['stop']:
                 # must stop ?
@@ -112,6 +120,7 @@ def makeIndexedDict(array, column, options):
         ret[key] = line
 
     return ret
+
 
 def csvmerge(handler1, handler2, set_options={}):
     """Merges 2 CSV files
@@ -130,7 +139,7 @@ def csvmerge(handler1, handler2, set_options={}):
        only - keep common (0) or differences (1 or 2) (0)
 
        * Starts with 0
-    """    
+    """
     # Creating arrays
     array1 = csv2array(handler1)
     array2 = csv2array(handler2)
@@ -147,7 +156,7 @@ def csvmerge(handler1, handler2, set_options={}):
         'only': 0
         }
     options.update(set_options)
-    
+
     # Getting max length
     len1 = getMaxLength(array1)
     len2 = getMaxLength(array2)
@@ -158,7 +167,7 @@ def csvmerge(handler1, handler2, set_options={}):
 
     # Creating dictionary for 2nd file
     dict2 = makeIndexedDict(array2, options['column2'], options)
-    
+
     # Finding te commond elements
     commonList = findCommonColumnList(array1, array2, options['column1'],
                                       options['column2'])
@@ -173,7 +182,7 @@ def csvmerge(handler1, handler2, set_options={}):
                     # in common, and display common
                     csv_writer.writerow(
                         formatList(line, dict2[idx], options['format']))
-            elif options['only'] == 1: # not in commonList
+            elif options['only'] == 1:  # not in commonList
                 # only in first file
                 csv_writer.writerow(
                     formatList(line, [''] * len2, options['format']))
@@ -186,6 +195,7 @@ def csvmerge(handler1, handler2, set_options={}):
                     formatList([''] * len1, line, options['format']))
 
     return merge
+
 
 def formatList(list1, list2, format):
     """Ouput a formated list, merging the 2 lists
@@ -210,6 +220,7 @@ def formatList(list1, list2, format):
             ret.append(worklist[listnum][eval(colnum) - 1])
 
     return ret
+
 
 def createOptionParser():
     """Creates the options parser
@@ -249,7 +260,7 @@ def createOptionParser():
 if __name__ == '__main__':
     # Option parser
     opt = createOptionParser()
-    
+
     # Parsing, and checking
     (options, args) = opt.parse_args()
 
@@ -272,12 +283,12 @@ if __name__ == '__main__':
 
     if options.only not in [0, 1, 2]:
         opt.error('only must be 1 or 2 !')
-        
+
     merge = csvmerge(open(args[0]), open(args[1]), {
-        'column1' : options.column1 - 1, 'column2' : options.column2 - 1,
-        'stop' : options.stop, 'first': options.first,
+        'column1': options.column1 - 1, 'column2': options.column2 - 1,
+        'stop': options.stop, 'first': options.first,
         'format': options.format, 'only': options.only,
         })
-                                       
+
     for line in merge:
         print line.strip()
